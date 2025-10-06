@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>命盘分析 - Destiny算命小程序</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- 添加markdown解析库 -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/github-markdown-css@5.3.0/github-markdown.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap');
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .card {
+            backdrop-filter: blur(16px);
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.2);
+        }
+        .btn {
+            transition: all 0.3s ease;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+        .btn:active {
+            transform: translateY(0);
+        }
+        .nav-link {
+            transition: all 0.3s ease;
+        }
+        .nav-link:hover {
+            color: #667eea !important;
+        }
+        .nav-link.active {
+            color: #667eea !important;
+            font-weight: 600;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .chart-container {
+            background: radial-gradient(circle at center, #f9fafb 0%, #e5e7eb 100%);
+            border-radius: 50%;
+            position: relative;
+        }
+        .chart-item {
+            position: absolute;
+            transition: all 0.3s ease;
+        }
+        .chart-item:hover {
+            transform: scale(1.05);
+            z-index: 10;
+        }
+    </style>
+</head>
+<body class="p-4">
+    <!-- 导航栏 -->
+    <nav class="bg-white bg-opacity-90 backdrop-filter backdrop-blur-lg rounded-xl p-4 mb-6 shadow-lg">
+        <div class="container mx-auto">
+            <div class="flex justify-between items-center">
+                <div class="text-2xl font-bold text-indigo-600">Destiny</div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="/dashboard" class="nav-link text-gray-600">个人主页</a>
+                    <a href="/calculator" class="nav-link text-gray-600">测算命盘</a>
+                    <a href="/chart" class="nav-link active text-gray-700">命盘分析</a>
+                    <a href="/chat" class="nav-link text-gray-600">命理对话</a>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-gray-700">欢迎，{{ session.username }}</span>
+                    <a href="/logout" class="btn bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600">
+                        <i class="fa fa-sign-out mr-1"></i> 退出
+                    </a>
+                </div>
+            </div>
+            <div class="md:hidden mt-4">
+                <div class="flex space-x-4 overflow-x-auto scrollbar-hide pb-2">
+                    <a href="/dashboard" class="nav-link text-gray-600 whitespace-nowrap">个人主页</a>
+                    <a href="/calculator" class="nav-link text-gray-600 whitespace-nowrap">测算命盘</a>
+                    <a href="/chart" class="nav-link active text-gray-700 whitespace-nowrap">命盘分析</a>
+                    <a href="/chat" class="nav-link text-gray-600 whitespace-nowrap">命理对话</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容 -->
+    <div class="container mx-auto">
+        {% if natal_chart %}
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-gray-800 mb-2">你的命盘分析</h1>
+                <p class="text-gray-600">生成时间: {{ natal_chart.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- 左侧：命盘可视化 -->
+                <div class="card p-6 lg:col-span-1">
+                    <h2 class="text-xl font-bold text-gray-800 mb-6 text-center">命盘九宫格</h2>
+                    
+                    <div class="chart-container w-64 h-64 mx-auto relative">
+                        <!-- 中心 -->
+                        <div class="chart-item w-20 h-20 bg-indigo-500 text-white flex items-center justify-center rounded-lg shadow-lg" style="top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                            <span class="text-sm font-bold text-center">命宫</span>
+                        </div>
+                        
+                        <!-- 其他宫位 -->
+                        <div class="chart-item w-16 h-16 bg-purple-500 text-white flex items-center justify-center rounded-lg shadow-lg" style="top: 12%; left: 50%; transform: translate(-50%, -50%);">
+                            <span class="text-xs text-center">父母宫</span>
+                        </div>
+                        
+                        <div class="chart-item w-16 h-16 bg-blue-500 text-white flex items-center justify-center rounded-lg shadow-lg" style="top: 38%; left: 84%; transform: translate(-50%, -50%);">
+                            <span class="text-xs text-center">兄弟宫</span>
+                        </div>
+                        
+                        <div class="chart-item w-16 h-16 bg-teal-500 text-white flex items-center justify-center rounded-lg shadow-lg" style="top: 84%; left: 84%; transform: translate(-50%, -50%);">
+                            <span class="text-xs text-center">夫妻宫</span>
+                        </div>
+                        
+                        <div class="chart-item w-16 h-16 bg-green-500 text-white flex items-center justify-center rounded-lg shadow-lg" style="top: 84%; left: 16%; transform: translate(-50%, -50%);">
+                            <span class="text-xs text-center">子女宫</span>
+                        </div>
+                        
+                        <div class="chart-item w-16 h-16 bg-yellow-500 text-white flex items-center justify-center rounded-lg shadow-lg" style="top: 38%; left: 16%; transform: translate(-50%, -50%);">
+                            <span class="text-xs text-center">财帛宫</span>
+                        </div>
+                        
+                        <div class="chart-item w-16 h-16 bg-orange-500 text-white flex items-center justify-center rounded-lg shadow-lg" style="top: 12%; left: 16%; transform: translate(-50%, -50%);">
+                            <span class="text-xs text-center">疾厄宫</span>
+                        </div>
+                        
+                        <div class="chart-item w-16 h-16 bg-red-500 text-white flex items-center justify-center rounded-lg shadow-lg" style="top: 12%; left: 84%; transform: translate(-50%, -50%);">
+                            <span class="text-xs text-center">迁移宫</span>
+                        </div>
+                        
+                        <div class="chart-item w-16 h-16 bg-pink-500 text-white flex items-center justify-center rounded-lg shadow-lg" style="top: 84%; left: 50%; transform: translate(-50%, -50%);">
+                            <span class="text-xs text-center">事业宫</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-8">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4 text-center">命盘基本信息</h3>
+                        
+                        <div class="space-y-3">
+                            <div class="bg-gray-50 p-3 rounded-lg">
+                                <div class="flex justify-between items-center mb-1">
+                                    <p class="text-sm text-gray-500">八字</p>
+                                    <button id="toggle-bazi" class="text-xs text-indigo-600 hover:text-indigo-800">
+                                        <i class="fa fa-eye-slash"></i> 显示
+                                    </button>
+                                </div>
+                                <p id="bazi-content" class="font-medium text-gray-800 hidden">
+                                    {% if natal_chart.birth_year %} {{ natal_chart.birth_year }}年 {% else %} ****年 {% endif %}
+                                    {% if natal_chart.birth_month %} {{ natal_chart.birth_month }}月 {% else %} ****月 {% endif %}
+                                    {% if natal_chart.birth_day %} {{ natal_chart.birth_day }}日 {% else %} ****日 {% endif %}
+                                    {% if natal_chart.birth_hour %} {{ natal_chart.birth_hour }}时 {% else %} ****时 {% endif %}
+                                </p>
+                                <p id="bazi-placeholder" class="font-medium text-gray-800">
+                                    ****年 ****月 ****日 ****时
+                                </p>
+                            </div>
+                            
+                            <!-- 数据验证状态显示 -->
+                            {% if natal_chart.validation_info %}
+                                <div class="bg-blue-50 border border-blue-200 text-blue-700 p-2 rounded-lg text-xs mb-3">
+                                    数据验证状态: 
+                                    {% if natal_chart.data_valid %}
+                                        <span class="font-bold text-green-600">✓ 完整有效</span>
+                                    {% else %}
+                                        <span class="font-bold text-orange-600">⚠ 需完善</span>
+                                    {% endif %}
+                                    (分析长度: {{ natal_chart.validation_info.chart_result_length }}字符)
+                                </div>
+                            {% endif %}
+                            
+                            <div class="bg-gray-50 p-3 rounded-lg">
+                                <p class="text-sm text-gray-500">五行属性</p>
+                                <p id="five-elements" class="font-medium text-gray-800">
+                                    <span class="loading-element">分析中...</span>
+                                </p>
+                            </div>
+                            
+                            <div class="bg-gray-50 p-3 rounded-lg">
+                                <p class="text-sm text-gray-500">生肖</p>
+                                <p class="font-medium text-gray-800" id="zodiac-info">
+                                    {% set zodiacs = ['鼠', '牛', '虎', '兔', '龙', '蛇', '马', '羊', '猴', '鸡', '狗', '猪'] %}
+                                    {% if natal_chart.birth_year %}
+                                        {% set year_value = natal_chart.birth_year | string | int %}
+                                        <span class="font-bold text-indigo-600">{{ zodiacs[(year_value - 1900) % 12] }}</span>
+                                    {% else %}
+                                        <span class="loading-element">分析中...</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 右侧：命盘详细分析 -->
+                <div class="card p-6 lg:col-span-2">
+                    <h2 class="text-xl font-bold text-gray-800 mb-6">详细分析结果</h2>
+                    
+                    <!-- 隐藏的命盘数据存储，供JavaScript使用 -->
+                <div id="natal-chart-data" style="display: none;">
+                    {{ natal_chart | tojson }}
+                </div>
+                
+                <div id="chart-content" class="prose max-w-none markdown-body">
+                    <!-- 初始内容将在JavaScript中处理 -->
+                    <div class="loading" data-chart-result="{{ natal_chart.chart_result | tojson }}">加载中...</div>
+                </div>
+                    
+                    <div class="mt-8 text-center">
+                        <a href="/chat" class="btn bg-indigo-600 text-white font-medium py-3 px-8 rounded-lg hover:bg-indigo-700 inline-flex items-center">
+                            <i class="fa fa-comments-o mr-2"></i> 与命理师对话
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="card p-8 text-center">
+                <i class="fa fa-fortune-cookie text-8xl text-gray-300 mb-6"></i>
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">未找到命盘信息</h2>
+                <p class="text-gray-600 mb-8">您还没有生成命盘，请先进行测算</p>
+                <a href="/calculator" class="btn bg-indigo-600 text-white font-medium py-3 px-8 rounded-lg hover:bg-indigo-700 inline-flex items-center">
+                    <i class="fa fa-star-o mr-2"></i> 生成命盘
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                // 八字显示/隐藏切换功能
+                const toggleBtn = document.getElementById('toggle-bazi');
+                const baziContent = document.getElementById('bazi-content');
+                const baziPlaceholder = document.getElementById('bazi-placeholder');
+                
+                if (toggleBtn && baziContent && baziPlaceholder) {
+                    toggleBtn.addEventListener('click', function() {
+                        if (baziContent.classList.contains('hidden')) {
+                            baziContent.classList.remove('hidden');
+                            baziPlaceholder.classList.add('hidden');
+                            toggleBtn.innerHTML = '<i class="fa fa-eye"></i> 隐藏';
+                        } else {
+                            baziContent.classList.add('hidden');
+                            baziPlaceholder.classList.remove('hidden');
+                            toggleBtn.innerHTML = '<i class="fa fa-eye-slash"></i> 显示';
+                        }
+                    });
+                }
+                
+                // 从隐藏元素获取完整的命盘数据
+                const natalChartDataElement = document.getElementById('natal-chart-data');
+                const natalChartData = JSON.parse(natalChartDataElement.textContent);
+                const chartResultContent = natalChartData.chart_result;
+                const validationInfo = natalChartData.validation_info || {};
+                const dataValid = natalChartData.data_valid !== undefined ? natalChartData.data_valid : true;
+                
+                console.log('命盘数据验证信息:', validationInfo);
+                console.log('数据是否完整有效:', dataValid);
+                
+                // 显示验证状态信息
+                displayValidationStatus(dataValid, validationInfo);
+                
+                // 提取并显示五行属性和生肖信息
+                if (chartResultContent) {
+                    // 增强的五行提取逻辑，确保绝不降级处理
+                    extractFiveElementsEnhanced(chartResultContent, validationInfo);
+                    extractZodiacFromContent(chartResultContent);
+                } else {
+                    console.error('未找到chartResultContent数据');
+                    document.getElementById('five-elements').innerHTML = '<span class="text-red-600">数据加载失败</span>';
+                    document.getElementById('zodiac-info').innerHTML = '<span class="text-red-600">数据加载失败</span>';
+                }
+                
+                // Markdown渲染和思考部分展开/收起功能，这部分依赖于marked库
+                const chartContent = document.getElementById('chart-content');
+                if (chartContent && chartResultContent && window.marked) {
+                    // 渲染Markdown
+                    const parsedHtml = marked.parse(chartResultContent);
+                    
+                    // 处理思考部分
+                    chartContent.innerHTML = processThinkingSections(parsedHtml);
+                    
+                    // 绑定思考部分的展开/收起事件
+                    document.querySelectorAll('.thinking-section-toggle').forEach(toggle => {
+                        toggle.addEventListener('click', function() {
+                            const content = this.nextElementSibling;
+                            
+                            if (content.classList.contains('hidden')) {
+                                content.classList.remove('hidden');
+                                this.innerHTML = '<i class="fa fa-chevron-up mr-2"></i> 收起思考过程';
+                            } else {
+                                content.classList.add('hidden');
+                                this.innerHTML = '<i class="fa fa-chevron-down mr-2"></i> 展开思考过程';
+                            }
+                        });
+                    });
+                } else if (chartContent && chartResultContent) {
+                    // 如果marked库不可用，直接显示原始内容
+                    chartContent.textContent = chartResultContent;
+                }
+            } catch (error) {
+                console.error('处理命盘数据时出错:', error);
+                const validationStatusElement = document.querySelector('.validation-status');
+                if (validationStatusElement) {
+                    validationStatusElement.innerHTML = '<p class="text-red-600">数据加载失败，请刷新页面重试。</p>';
+                }
+                document.getElementById('chart-content').innerHTML = '<p class="text-red-600">内容加载失败，请刷新页面重试。</p>';
+            }
+        });
+        
+        // 显示数据验证状态
+        function displayValidationStatus(dataValid, validationInfo) {
+            // 查找数据验证状态显示元素
+            const statusElement = document.querySelector('.bg-blue-50.border.border-blue-200.text-blue-700.p-2.rounded-lg.text-xs.mb-3');
+            if (!statusElement) return;
+            
+            if (dataValid) {
+                // 数据有效
+                statusElement.innerHTML = `
+                    <div class="flex items-center">
+                        <svg class="h-4 w-4 text-green-500 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                        </svg>
+                        数据验证状态: <span class="font-bold text-green-600">✓ 完整有效</span>
+                        (分析长度: ${validationInfo.chart_result_length || 0}字符)
+                    </div>
+                `;
+            } else {
+                // 数据无效，显示详细错误信息
+                let errorMessage = '<div class="flex items-start">' +
+                    '<svg class="h-4 w-4 text-red-500 mr-2 mt-0.5" viewBox="0 0 20 20" fill="currentColor">' +
+                    '<path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />' +
+                    '</svg>' +
+                    '<div>' +
+                    '数据验证状态: <span class="font-bold text-red-600">⚠ 验证失败</span><br>';
+                
+                // 添加详细错误信息
+                const errorList = [];
+                if (validationInfo.birth_data_invalid) {
+                    errorList.push('出生日期数据不完整或格式错误');
+                }
+                if (validationInfo.chart_result_invalid) {
+                    errorList.push('命盘分析内容质量不达标');
+                }
+                if (validationInfo.chart_result_short) {
+                    errorList.push('命盘分析内容过短');
+                }
+                if (validationInfo.chart_result_missing_keywords) {
+                    errorList.push('命盘分析缺少关键信息');
+                }
+                
+                if (errorList.length > 0) {
+                    errorMessage += '<span class="text-xs text-red-500">' + errorList.join('；') + '</span>';
+                }
+                
+                errorMessage += `</div></div>`;
+                statusElement.innerHTML = errorMessage;
+                statusElement.classList.remove('bg-blue-50', 'border-blue-200', 'text-blue-700');
+                statusElement.classList.add('bg-red-50', 'border-red-200', 'text-red-700');
+            }
+        }
+        
+        // 处理思考部分，添加展开/收起功能
+        function processThinkingSections(chartContent) {
+            // 检测并处理思考部分
+            // 寻找包含"思考过程"、"分析思路"等关键词的段落或标题
+            const thinkingKeywords = ['思考过程', '分析思路', '命理推导', '推导过程', '【思考过程】', '【分析思路】', '【命理推导】', '【推导过程】'];
+            
+            // 如果传入的是字符串内容，则先渲染为HTML
+            let tempDiv = document.createElement('div');
+            if (typeof chartContent === 'string') {
+                tempDiv.innerHTML = chartContent;
+            } else {
+                // 如果传入的是DOM元素，则使用克隆
+                tempDiv = chartContent.cloneNode(true);
+            }
+            
+
+            
+            // 检查所有标题和段落
+            const elements = tempDiv.querySelectorAll('h1, h2, h3, h4, h5, h6, p, div');
+            
+            elements.forEach(element => {
+                const text = element.textContent;
+                
+                // 检查是否包含思考相关关键词
+                const hasThinkingKeyword = thinkingKeywords.some(keyword => 
+                    text.includes(keyword)
+                );
+                
+                if (hasThinkingKeyword) {
+                    // 找到思考部分的标题
+                    const thinkingSection = document.createElement('div');
+                    thinkingSection.className = 'thinking-container my-6 p-4 bg-gray-50 rounded-lg border-l-4 border-yellow-400';
+                    
+                    // 创建切换按钮
+                    const toggleButton = document.createElement('button');
+                    toggleButton.className = 'thinking-section-toggle w-full text-left font-medium text-yellow-700 hover:text-yellow-900 flex items-center transition-colors';
+                    toggleButton.innerHTML = '<i class="fa fa-chevron-down mr-2"></i> 展开思考过程';
+                    
+                    // 创建内容容器
+                    const contentContainer = document.createElement('div');
+                    contentContainer.className = 'thinking-content hidden mt-3 text-gray-700 overflow-hidden transition-all duration-300';
+                    
+                    // 将当前元素和后续元素添加到内容容器
+                    let currentElement = element;
+                    while (currentElement) {
+                        const nextElement = currentElement.nextElementSibling;
+                        
+                        // 保留原始内容
+                        contentContainer.appendChild(currentElement.cloneNode(true));
+                        
+                        // 从原文档中移除
+                        tempDiv.removeChild(currentElement);
+                        
+                        currentElement = nextElement;
+                        
+                        // 如果没有下一个元素或下一个包含新的主要标题或思考部分，则退出循环
+                        if (!currentElement || isMajorHeading(currentElement) || 
+                            (currentElement.tagName.toLowerCase() === 'p' && 
+                             thinkingKeywords.some(keyword => currentElement.textContent.includes(keyword)))) {
+                            break;
+                        }
+                    }
+                    
+                    // 组装思考部分
+                    thinkingSection.appendChild(toggleButton);
+                    thinkingSection.appendChild(contentContainer);
+                    
+                    // 如果有当前元素，在其前面插入思考部分
+                    if (currentElement) {
+                        tempDiv.insertBefore(thinkingSection, currentElement);
+                    } else {
+                        tempDiv.appendChild(thinkingSection);
+                    }
+                }
+            });
+            
+            return tempDiv.innerHTML;
+        }
+        
+        // 判断是否为主要标题（h1-h4）
+        function isMajorHeading(element) {
+            const tagName = element.tagName.toLowerCase();
+            return ['h1', 'h2', 'h3', 'h4'].includes(tagName);
+        }
+        
+        // 增强的五行属性提取函数，确保绝不降级处理
+        function extractFiveElementsEnhanced(chartContent, validationInfo) {
+            const fiveElementsElement = document.getElementById('five-elements');
+            
+            if (!chartContent || !fiveElementsElement) {
+                console.error('缺少必要的参数或DOM元素');
+                fiveElementsElement.innerHTML = '<span class="text-red-600">数据异常</span>';
+                return;
+            }
+            
+            // 记录开始处理时间
+            const startTime = Date.now();
+            console.log('开始提取五行属性，数据长度:', chartContent.length);
+            
+            // 五行字符集
+            const validElements = ['金', '木', '水', '火', '土'];
+            
+            // 增强的正则表达式集合，覆盖更多模式
+            const fiveElementsRegexes = [
+                // 匹配明确的五行属性声明
+                /五行属性[:：]?\s*([\u4e00-\u9fa5]+)/,
+                /五行[:：]?\s*([\u4e00-\u9fa5]+)/,
+                
+                // 匹配日主天干信息
+                /日主天干[:：]?\s*(\w)/,
+                /日元[:：]?\s*(\w)/,
+                
+                // 匹配五行配置/构成
+                /五行配置[:：]\s*([\u4e00-\u9fa5]+)/,
+                /五行构成[:：]\s*([\u4e00-\u9fa5]+)/,
+                
+                // 匹配五行旺衰信息
+                /五行旺衰[:：]\s*([\u4e00-\u9fa5]+)/,
+                
+                // 匹配详细的五行分析段落
+                /五行分析.*?([金木水火土]+)/s,
+                
+                // 匹配四柱天干地支中的五行信息
+                /四柱.*?([金木水火土]+)/s,
+                
+                // 匹配用神分析中的五行信息
+                /用神.*?([金木水火土]+)/s
+            ];
+            
+            // 尝试从分析结果中提取五行信息
+            let foundElements = null;
+            let matchedPattern = null;
+            
+            for (let i = 0; i < fiveElementsRegexes.length; i++) {
+                const regex = fiveElementsRegexes[i];
+                const match = chartContent.match(regex);
+                if (match && match[1]) {
+                    foundElements = match[1];
+                    matchedPattern = i;
+                    console.log(`找到五行信息，匹配模式 #${matchedPattern}:`, foundElements);
+                    break;
+                }
+            }
+            
+            // 过滤有效五行字符并去重
+            let filteredElements = '';
+            if (foundElements) {
+                for (let char of foundElements) {
+                    if (validElements.includes(char) && !filteredElements.includes(char)) {
+                        filteredElements += char;
+                    }
+                }
+                
+                // 如果过滤后的结果为空，尝试从整个文本中提取
+                if (!filteredElements) {
+                    console.warn('过滤后未找到有效五行字符，尝试全局提取');
+                    for (let char of chartContent) {
+                        if (validElements.includes(char) && filteredElements.indexOf(char) === -1) {
+                            filteredElements += char;
+                        }
+                    }
+                }
+            } else {
+                // 直接从整个文本中提取所有五行字符
+                console.warn('未找到明确的五行模式，尝试全局提取');
+                for (let char of chartContent) {
+                    if (validElements.includes(char) && filteredElements.indexOf(char) === -1) {
+                        filteredElements += char;
+                    }
+                }
+            }
+            
+            // 如果提取到了五行信息，为每个五行添加颜色样式
+            if (filteredElements) {
+                // 按照金木水火土的顺序排序（如果包含这些元素）
+                const standardOrder = ['金', '木', '水', '火', '土'];
+                let orderedElements = '';
+                
+                for (let element of standardOrder) {
+                    if (filteredElements.includes(element)) {
+                        orderedElements += element;
+                    }
+                }
+                
+                // 如果有不在标准顺序中的元素（理论上不应该有），添加到末尾
+                for (let element of filteredElements) {
+                    if (!standardOrder.includes(element)) {
+                        orderedElements += element;
+                    }
+                }
+                
+                let coloredElements = '';
+                const elementColors = {
+                    '金': 'text-yellow-600',
+                    '木': 'text-green-600',
+                    '水': 'text-blue-600',
+                    '火': 'text-red-600',
+                    '土': 'text-amber-600'
+                };
+                
+                for (let i = 0; i < orderedElements.length; i++) {
+                    const element = orderedElements[i];
+                    const color = elementColors[element] || '';
+                    coloredElements += `<span class="font-bold ${color}">${element}</span>`;
+                    if (i < orderedElements.length - 1) {
+                        coloredElements += ' ';
+                    }
+                }
+                
+                // 添加数据质量指示器
+                let qualityIndicator = '';
+                if (validationInfo && validationInfo.chart_result_valid) {
+                    qualityIndicator = ' <span class="text-xs text-green-500">(✓)</span>';
+                } else if (validationInfo) {
+                    qualityIndicator = ' <span class="text-xs text-orange-500">(⚠)</span>';
+                }
+                
+                fiveElementsElement.innerHTML = coloredElements + qualityIndicator;
+                console.log('成功提取五行属性:', orderedElements);
+            } else {
+                // 如果确实没有找到任何五行信息，显示错误提示但不降级处理
+                console.error('无法从命盘分析中提取任何五行信息');
+                fiveElementsElement.innerHTML = '<span class="text-red-600 font-bold">数据解析异常</span>';
+            }
+            
+            // 记录处理时间
+            const processingTime = Date.now() - startTime;
+            console.log(`五行属性提取完成，耗时: ${processingTime}ms`);
+        }
+        
+        // 原有的五行属性提取函数（保留以确保兼容性）
+        function extractFiveElements(chartContent) {
+            extractFiveElementsEnhanced(chartContent);
+        }
+        
+        // 从命盘分析内容中提取生肖信息
+        function extractZodiacFromContent(chartContent) {
+            const zodiacElement = document.getElementById('zodiac-info');
+            
+            if (!chartContent || !zodiacElement) return;
+            
+            // 生肖数组，用于验证提取的生肖是否有效
+            const zodiacs = ['鼠', '牛', '虎', '兔', '龙', '蛇', '马', '羊', '猴', '鸡', '狗', '猪'];
+            
+            // 查找生肖相关内容的正则表达式
+            const zodiacRegexes = [
+                // 匹配类似"生肖：鼠"或"属鼠"的模式
+                /生肖[:：]?\s*(\w)/,
+                /属(\w)/,
+                /你是(\w)年出生/,
+                // 匹配具体年份加生肖
+                /(\d{4})年(\w)年/,
+                /(\d{4})年生\s*(\w)年/,
+            ];
+            
+            // 尝试使用不同的正则表达式提取生肖信息
+            let foundZodiac = null;
+            
+            for (let regex of zodiacRegexes) {
+                const match = chartContent.match(regex);
+                if (match) {
+                    // 根据不同的匹配模式提取生肖
+                    if (match[2]) {
+                        foundZodiac = match[2];
+                    } else if (match[1]) {
+                        foundZodiac = match[1];
+                    }
+                    break;
+                }
+            }
+            
+            // 如果找到了生肖信息，进行显示
+            if (foundZodiac && zodiacs.includes(foundZodiac)) {
+                zodiacElement.innerHTML = `<span class="font-bold text-indigo-600">${foundZodiac}</span>`;
+            } else {
+                // 如果没有找到生肖信息，保持原有显示
+                zodiacElement.innerHTML = '未知';
+            }
+        }
+    </script>
+</body>
+</html>

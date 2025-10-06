@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 - Destiny算命小程序</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap');
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .card {
+            backdrop-filter: blur(16px);
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.2);
+        }
+        .input-field {
+            transition: all 0.3s ease;
+        }
+        .input-field:focus-within {
+            transform: translateY(-2px);
+        }
+        .input-field i {
+            transition: color 0.3s ease;
+        }
+        .input-field:focus-within i {
+            color: #667eea;
+        }
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: all 0.3s ease;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+        .btn:active {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4">
+    <div class="card w-full max-w-md p-8">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">Destiny</h1>
+            <p class="text-gray-600">欢迎回来，请登录</p>
+        </div>
+        
+        <form method="POST" action="/login">
+            {% if success %}
+            <div class="bg-green-100 text-green-700 p-3 rounded-lg mb-4">
+                {{ success }}
+            </div>
+            {% endif %}
+            {% if error %}
+            <div class="bg-red-100 text-red-700 p-3 rounded-lg mb-4">
+                {{ error }}
+            </div>
+            {% endif %}
+            
+            <div class="input-field mb-5 relative">
+                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                    <i class="fa fa-user text-gray-400"></i>
+                </div>
+                <input type="text" name="username" placeholder="用户名" 
+                       class="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none">
+            </div>
+            
+            <div class="input-field mb-6 relative">
+                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                    <i class="fa fa-lock text-gray-400"></i>
+                </div>
+                <input type="password" name="password" placeholder="密码" 
+                       class="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none">
+            </div>
+            
+            <button type="submit" class="btn w-full text-white font-medium py-3 px-6 rounded-lg">
+                登录
+            </button>
+        </form>
+        
+        <div class="mt-6 text-center">
+            <p class="text-gray-600">还没有账户？<a href="/register" class="text-indigo-600 font-medium hover:underline">立即注册</a></p>
+        </div>
+    </div>
+</body>
+</html>

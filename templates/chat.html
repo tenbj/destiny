@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>命理对话 - Destiny算命小程序</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- 添加markdown解析库 -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/github-markdown-css@5.3.0/github-markdown.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap');
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .card {
+            backdrop-filter: blur(16px);
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.2);
+        }
+        .btn {
+            transition: all 0.3s ease;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+        .btn:active {
+            transform: translateY(0);
+        }
+        .nav-link {
+            transition: all 0.3s ease;
+        }
+        .nav-link:hover {
+            color: #667eea !important;
+        }
+        .nav-link.active {
+            color: #667eea !important;
+            font-weight: 600;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .message-bubble-user {
+            background-color: #6366f1;
+            color: white;
+            border-radius: 18px 18px 4px 18px;
+            align-self: flex-end;
+            max-width: 80%;
+        }
+        .message-bubble-ai {
+            background-color: #e5e7eb;
+            color: #374151;
+            border-radius: 18px 18px 18px 4px;
+            align-self: flex-start;
+            max-width: 80%;
+        }
+        .input-field {
+            transition: all 0.3s ease;
+        }
+        .input-field:focus-within {
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+        }
+    </style>
+</head>
+<body class="p-4">
+    <!-- 导航栏 -->
+    <nav class="bg-white bg-opacity-90 backdrop-filter backdrop-blur-lg rounded-xl p-4 mb-6 shadow-lg">
+        <div class="container mx-auto">
+            <div class="flex justify-between items-center">
+                <div class="text-2xl font-bold text-indigo-600">Destiny</div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="/dashboard" class="nav-link text-gray-600">个人主页</a>
+                    <a href="/calculator" class="nav-link text-gray-600">测算命盘</a>
+                    <a href="/chart" class="nav-link text-gray-600">命盘分析</a>
+                    <a href="/chat" class="nav-link active text-gray-700">命理对话</a>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-gray-700">欢迎，{{ session.username }}</span>
+                    <a href="/logout" class="btn bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600">
+                        <i class="fa fa-sign-out mr-1"></i> 退出
+                    </a>
+                </div>
+            </div>
+            <div class="md:hidden mt-4">
+                <div class="flex space-x-4 overflow-x-auto scrollbar-hide pb-2">
+                    <a href="/dashboard" class="nav-link text-gray-600 whitespace-nowrap">个人主页</a>
+                    <a href="/calculator" class="nav-link text-gray-600 whitespace-nowrap">测算命盘</a>
+                    <a href="/chart" class="nav-link text-gray-600 whitespace-nowrap">命盘分析</a>
+                    <a href="/chat" class="nav-link active text-gray-700 whitespace-nowrap">命理对话</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容 -->
+    <div class="container mx-auto">
+        <div class="card p-6">
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-indigo-600 rounded-full flex items-center justify-center text-white text-xl mr-4">
+                        <i class="fa fa-user-circle-o"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-800">命理师对话</h2>
+                        <p class="text-gray-500 text-sm">您可以提问关于命盘、运势、事业、感情等问题</p>
+                    </div>
+                </div>
+                <button id="clear-chat" class="text-gray-500 hover:text-gray-700">
+                    <i class="fa fa-trash-o mr-1"></i> 清空对话
+                </button>
+            </div>
+            
+            <div id="chat-container" class="bg-gray-50 rounded-xl p-4 h-[60vh] overflow-y-auto mb-6 flex flex-col space-y-4">
+                <!-- 欢迎消息 -->
+                <div class="message-bubble-ai p-4">
+                    <div class="flex items-center mb-2">
+                        <div class="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center text-white text-sm mr-2">
+                            <i class="fa fa-user-circle-o"></i>
+                        </div>
+                        <span class="text-sm font-medium">命理师</span>
+                    </div>
+                    <p class="text-sm">欢迎咨询！我已了解您的命盘信息，请问有什么可以帮助您的？</p>
+                </div>
+                
+                <!-- 历史对话将在这里加载 -->
+                <div id="chat-history" class="flex flex-col space-y-4">
+                    <!-- 对话历史会通过JavaScript动态加载 -->
+                </div>
+                
+                <!-- 加载指示器 -->
+                <div id="loading-indicator" class="hidden align-self-start">
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center text-white text-sm mr-2">
+                            <i class="fa fa-user-circle-o"></i>
+                        </div>
+                        <div class="bg-gray-100 p-3 rounded-lg">
+                            <div class="flex space-x-2">
+                                <div class="w-2 h-2 bg-indigo-600 rounded-full animate-bounce"></div>
+                                <div class="w-2 h-2 bg-indigo-600 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                                <div class="w-2 h-2 bg-indigo-600 rounded-full animate-bounce" style="animation-delay: 0.4s"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 输入框 -->
+            <div class="input-field flex items-center space-x-3">
+                <input type="text" id="user-message" placeholder="请输入您的问题..." 
+                       class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                <button id="send-message" class="btn bg-indigo-600 text-white p-3 rounded-xl hover:bg-indigo-700">
+                    <i class="fa fa-paper-plane"></i>
+                </button>
+            </div>
+            
+            <!-- 提示问题 -->
+            <div class="mt-4">
+                <p class="text-sm text-gray-500 mb-2">您可以问：</p>
+                <div class="flex flex-wrap gap-2">
+                    <button class="suggested-question text-sm bg-gray-100 text-gray-700 px-3 py-1 rounded-full hover:bg-gray-200">我今年的运势如何？</button>
+                    <button class="suggested-question text-sm bg-gray-100 text-gray-700 px-3 py-1 rounded-full hover:bg-gray-200">我的事业发展方向？</button>
+                    <button class="suggested-question text-sm bg-gray-100 text-gray-700 px-3 py-1 rounded-full hover:bg-gray-200">我的感情状况如何？</button>
+                    <button class="suggested-question text-sm bg-gray-100 text-gray-700 px-3 py-1 rounded-full hover:bg-gray-200">如何改善我的财运？</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatContainer = document.getElementById('chat-container');
+            const chatHistory = document.getElementById('chat-history');
+            const userMessageInput = document.getElementById('user-message');
+            const sendMessageButton = document.getElementById('send-message');
+            const loadingIndicator = document.getElementById('loading-indicator');
+            const clearChatButton = document.getElementById('clear-chat');
+            const suggestedQuestions = document.querySelectorAll('.suggested-question');
+            
+            // 加载历史对话
+            loadChatHistory();
+            
+            // 发送消息
+            sendMessageButton.addEventListener('click', sendMessage);
+            userMessageInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+            
+            // 清空对话
+            clearChatButton.addEventListener('click', function() {
+                if (confirm('确定要清空所有对话记录吗？')) {
+                    chatHistory.innerHTML = '';
+                    // 这里可以添加清空历史记录的API调用
+                }
+            });
+            
+            // 点击提示问题
+            suggestedQuestions.forEach(button => {
+                button.addEventListener('click', function() {
+                    userMessageInput.value = this.textContent;
+                    sendMessage();
+                });
+            });
+            
+            function loadChatHistory() {
+                fetch('/api/get_history')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            data.history.forEach(item => {
+                                // 添加用户消息
+                                const userMessageElement = createUserMessageElement(item.query);
+                                chatHistory.appendChild(userMessageElement);
+                                
+                                // 添加AI回复
+                                const aiMessageElement = createAiMessageElement(item.response);
+                                chatHistory.appendChild(aiMessageElement);
+                            });
+                            
+                            // 滚动到底部
+                            scrollToBottom();
+                        }
+                    })
+                    .catch(error => {
+                        console.error('加载历史记录失败:', error);
+                    });
+            }
+            
+            function sendMessage() {
+                const message = userMessageInput.value.trim();
+                
+                if (!message) {
+                    return;
+                }
+                
+                // 清空输入框
+                userMessageInput.value = '';
+                
+                // 添加用户消息到界面
+                const userMessageElement = createUserMessageElement(message);
+                chatHistory.appendChild(userMessageElement);
+                
+                // 滚动到底部
+                scrollToBottom();
+                
+                // 显示加载指示器
+                loadingIndicator.classList.remove('hidden');
+                
+                // 创建AI回复容器
+                const aiMessageContainer = document.createElement('div');
+                aiMessageContainer.className = 'message-bubble-ai p-4';
+                aiMessageContainer.innerHTML = `
+                    <div class="flex items-center mb-2">
+                        <div class="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center text-white text-sm mr-2">
+                            <i class="fa fa-user-circle-o"></i>
+                        </div>
+                        <span class="text-sm font-medium">命理师</span>
+                    </div>
+                    <div id="streaming-response" class="text-sm markdown-body"></div>
+                `;
+                
+                // 添加到聊天历史
+                chatHistory.appendChild(aiMessageContainer);
+                
+                // 获取响应容器
+                const responseContainer = aiMessageContainer.querySelector('#streaming-response');
+                
+                // 初始化消息内容
+                let fullResponse = '';
+                
+                // 使用fetch API的流式响应
+                fetch('/api/chat_stream', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message: message })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('网络响应错误');
+                    }
+                    
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder();
+                    
+                    // 隐藏加载指示器
+                    loadingIndicator.classList.add('hidden');
+                    
+                    // 处理流式响应
+                    function read() {
+                        reader.read().then(({ done, value }) => {
+                            if (done) {
+                                // 流式传输结束
+                                return;
+                            }
+                            
+                            // 解码并处理接收到的数据
+                            const chunk = decoder.decode(value, { stream: true });
+                            fullResponse += chunk;
+                            
+                            // 渲染markdown
+                            responseContainer.innerHTML = marked.parse(fullResponse);
+                            
+                            // 滚动到底部
+                            scrollToBottom();
+                            
+                            // 继续读取
+                            read();
+                        }).catch(error => {
+                            console.error('流式读取错误:', error);
+                            responseContainer.innerHTML = '<p class="text-red-600">消息接收失败，请稍后重试</p>';
+                        });
+                    }
+                    
+                    // 开始读取流
+                    read();
+                })
+                .catch(error => {
+                    // 隐藏加载指示器
+                    loadingIndicator.classList.add('hidden');
+                    
+                    // 显示错误消息
+                    responseContainer.innerHTML = '<p class="text-red-600">发送消息失败，请稍后重试</p>';
+                    
+                    // 滚动到底部
+                    scrollToBottom();
+                    
+                    console.error('发送消息失败:', error);
+                });
+            }
+            
+            function createUserMessageElement(message) {
+                const element = document.createElement('div');
+                element.className = 'message-bubble-user p-4';
+                element.innerHTML = `
+                    <div class="flex items-center mb-2 justify-end">
+                        <span class="text-sm font-medium">您</span>
+                        <div class="w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center text-white text-sm ml-2">
+                            <i class="fa fa-user"></i>
+                        </div>
+                    </div>
+                    <p class="text-sm">${message}</p>
+                `;
+                return element;
+            }
+            
+            function createAiMessageElement(message) {
+                const element = document.createElement('div');
+                element.className = 'message-bubble-ai p-4';
+                
+                // 将markdown转换为HTML
+                const htmlContent = marked.parse(message);
+                
+                element.innerHTML = `
+                    <div class="flex items-center mb-2">
+                        <div class="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center text-white text-sm mr-2">
+                            <i class="fa fa-user-circle-o"></i>
+                        </div>
+                        <span class="text-sm font-medium">命理师</span>
+                    </div>
+                    <div class="text-sm markdown-body">${htmlContent}</div>
+                `;
+                return element;
+            }
+            
+            function createErrorMessageElement(message) {
+                const element = document.createElement('div');
+                element.className = 'bg-red-50 p-4 rounded-lg border border-red-200 text-center';
+                element.innerHTML = `
+                    <p class="text-red-600 text-sm">${message}</p>
+                `;
+                return element;
+            }
+            
+            function scrollToBottom() {
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+        });
+    </script>
+</body>
+</html>

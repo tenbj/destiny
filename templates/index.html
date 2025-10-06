@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Destiny - 命理测算</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4F46E5',
+                        secondary: '#7C3AED',
+                        accent: '#10B981',
+                        dark: '#1E293B',
+                        light: '#F8FAFC'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                },
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .bg-gradient-custom {
+                background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+            }
+            .text-shadow {
+                text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            .transition-all-300 {
+                transition: all 0.3s ease;
+            }
+            .card-hover {
+                transition: all 0.3s ease;
+            }
+            .card-hover:hover {
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+                transform: translateY(-1px);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-dark min-h-screen">
+    <!-- 顶部导航栏 -->
+    <header class="sticky top-0 z-50 bg-white/90 backdrop-blur-sm shadow-sm">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <div class="w-10 h-10 rounded-full bg-gradient-custom flex items-center justify-center text-white">
+                    <i class="fa fa-star-o text-xl"></i>
+                </div>
+                <h1 class="text-xl font-bold text-primary">Destiny</h1>
+            </div>
+            <div class="hidden md:flex space-x-4">
+                <a href="/register" class="px-4 py-2 bg-white text-primary border border-primary rounded-full font-medium hover:bg-gray-50 transition-all duration-300">
+                    注册
+                </a>
+                <a href="/login" class="px-4 py-2 bg-gradient-custom text-white rounded-full font-medium shadow hover:shadow-md transition-all duration-300">
+                    登录
+                </a>
+            </div>
+            <button class="md:hidden text-gray-700" id="menu-toggle">
+                <i class="fa fa-bars text-xl"></i>
+            </button>
+        </div>
+        <!-- 移动端菜单 -->
+        <div id="mobile-menu" class="md:hidden hidden bg-white border-t">
+            <div class="container mx-auto px-4 py-3 space-y-3">
+                <a href="#home" class="block text-gray-700 hover:text-primary transition-colors">首页</a>
+                <a href="/register" class="block text-primary hover:text-primary/80 transition-colors">注册</a>
+                <a href="/login" class="block text-primary hover:text-primary/80 transition-colors">登录</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主要内容区域 -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- 首页/介绍部分 -->
+        <section id="home" class="py-12 md:py-24 text-center">
+            <div class="max-w-3xl mx-auto">
+                <h2 class="text-[clamp(2rem,5vw,3.5rem)] font-bold mb-6 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                    探索你的命运轨迹
+                </h2>
+                <p class="text-lg text-gray-600 mb-10">
+                    基于中国传统五行八卦紫微斗数理论，结合现代AI技术，为你揭示命运奥秘，提供人生指引。
+                </p>
+                <div class="flex flex-col sm:flex-row justify-center gap-4">
+                    <a href="/register" class="px-8 py-3 bg-gradient-custom text-white rounded-full font-medium shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+                        免费注册
+                    </a>
+                    <a href="/login" class="px-8 py-3 bg-white text-primary border border-primary rounded-full font-medium hover:bg-gray-50 transition-all duration-300">
+                        已有账户，去登录
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- 关于我们 -->
+        <section id="about" class="py-12 bg-white rounded-2xl shadow-md mb-12">
+            <div class="max-w-4xl mx-auto px-6">
+                <h3 class="text-2xl font-bold mb-6 text-center text-primary">关于 Destiny</h3>
+                <div class="grid md:grid-cols-2 gap-8 items-center">
+                    <div>
+                        <p class="text-gray-700 mb-4">
+                            Destiny 是一款结合中国传统命理学与现代AI技术的命运测算工具。我们的系统能够根据您的出生信息，生成详细的命盘分析报告，并通过AI命理师为您解答各种问题。
+                        </p>
+                        <p class="text-gray-700 mb-4">
+                            通过注册Destiny账户，您可以：
+                        </p>
+                        <ul class="space-y-2 text-gray-700">
+                            <li class="flex items-start">
+                                <i class="fa fa-check-circle text-accent mt-1 mr-2"></i>
+                                <span>保存您的个人命盘信息，随时查看</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fa fa-check-circle text-accent mt-1 mr-2"></i>
+                                <span>与AI命理师进行不限次数的对话咨询</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fa fa-check-circle text-accent mt-1 mr-2"></i>
+                                <span>获取个性化的命运分析和人生建议</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fa fa-check-circle text-accent mt-1 mr-2"></i>
+                                <span>安全地管理您的个人命理数据</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="bg-gradient-to-br from-primary/5 to-secondary/5 rounded-2xl p-8 flex flex-col items-center justify-center">
+                        <div class="w-24 h-24 rounded-full bg-gradient-custom flex items-center justify-center text-white mb-6">
+                            <i class="fa fa-compass text-4xl"></i>
+                        </div>
+                        <h4 class="text-xl font-semibold text-gray-800 mb-2">开始探索</h4>
+                        <p class="text-gray-600 text-center mb-6">注册账户，获取您的专属命盘分析</p>
+                        <a href="/register" class="px-6 py-2 bg-gradient-custom text-white rounded-full font-medium shadow hover:shadow-md transition-all duration-300">
+                            立即开始
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 主要功能 -->
+        <section class="py-12 mb-12">
+            <div class="max-w-4xl mx-auto">
+                <h3 class="text-2xl font-bold mb-10 text-center text-primary">我们的功能</h3>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="bg-white rounded-2xl shadow-md p-6 card-hover">
+                        <div class="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-4">
+                            <i class="fa fa-star-o text-2xl"></i>
+                        </div>
+                        <h4 class="text-xl font-semibold text-gray-800 mb-3">精准命盘分析</h4>
+                        <p class="text-gray-600">
+                            基于中国传统命理理论，结合现代算法技术，为您生成详尽准确的命盘分析报告，揭示您的命运轨迹。
+                        </p>
+                    </div>
+                    <div class="bg-white rounded-2xl shadow-md p-6 card-hover">
+                        <div class="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-4">
+                            <i class="fa fa-comments text-2xl"></i>
+                        </div>
+                        <h4 class="text-xl font-semibold text-gray-800 mb-3">AI命理师对话</h4>
+                        <p class="text-gray-600">
+                            智能命理师随时为您解答关于命运、事业、感情等问题，提供专业的命理建议和人生指导。
+                        </p>
+                    </div>
+                    <div class="bg-white rounded-2xl shadow-md p-6 card-hover">
+                        <div class="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-4">
+                            <i class="fa fa-user-circle text-2xl"></i>
+                        </div>
+                        <h4 class="text-xl font-semibold text-gray-800 mb-3">个性化运势</h4>
+                        <p class="text-gray-600">
+                            根据您的命盘特点，为您提供个性化的每日运势预测和生活建议，助您把握机遇。
+                        </p>
+                    </div>
+                    <div class="bg-white rounded-2xl shadow-md p-6 card-hover">
+                        <div class="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-4">
+                            <i class="fa fa-lock text-2xl"></i>
+                        </div>
+                        <h4 class="text-xl font-semibold text-gray-800 mb-3">数据安全保障</h4>
+                        <p class="text-gray-600">
+                            我们采用先进的加密技术保护您的个人信息和命理数据，确保您的隐私安全。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 行动召唤 -->
+        <section class="py-16 bg-gradient-custom rounded-3xl text-white text-center">
+            <div class="max-w-2xl mx-auto px-6">
+                <h3 class="text-2xl md:text-3xl font-bold mb-4">准备好探索您的命运了吗？</h3>
+                <p class="text-white/90 mb-8">
+                    加入Destiny，开启您的命理探索之旅，获取专业的命盘分析和个性化的人生指导。
+                </p>
+                <div class="flex flex-col sm:flex-row justify-center gap-4">
+                    <a href="/register" class="px-8 py-3 bg-white text-primary rounded-full font-medium shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+                        立即注册
+                    </a>
+                    <a href="/login" class="px-8 py-3 bg-transparent border-2 border-white text-white rounded-full font-medium hover:bg-white/10 transition-all duration-300">
+                        登录账号
+                    </a>
+                </div>
+            </div>
+        </section>
+            </div>
+        </section>
+
+        <!-- 关于部分 -->
+        <section id="about" class="py-12">
+            <div class="max-w-3xl mx-auto">
+                <h3 class="text-2xl font-bold mb-6 text-center text-primary">关于 Destiny</h3>
+                <div class="bg-white rounded-xl shadow-md p-6 md:p-8">
+                    <p class="text-gray-700 mb-4">
+                        Destiny 是一款结合中国传统命理学说与现代AI技术的智能算命小程序。我们基于五行八卦紫微斗数理论，通过先进的AI模型分析您的出生信息，为您提供精准的命盘分析和人生指导。
+                    </p>
+                    <p class="text-gray-700 mb-4">
+                        无论您是想了解自己的性格特点、职业发展、感情运势还是健康状况，Destiny 都能为您提供专业、全面的解答。我们的AI命理师随时准备回答您的任何问题。
+                    </p>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
+                        <div class="bg-gray-50 rounded-lg p-4 text-center card-hover">
+                            <div class="w-12 h-12 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                                <i class="fa fa-history text-xl"></i>
+                            </div>
+                            <h4 class="font-bold mb-2">传统智慧</h4>
+                            <p class="text-sm text-gray-600">基于中国千年传统命理学说</p>
+                        </div>
+                        <div class="bg-gray-50 rounded-lg p-4 text-center card-hover">
+                            <div class="w-12 h-12 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                                <i class="fa fa-brain text-xl"></i>
+                            </div>
+                            <h4 class="font-bold mb-2">AI 分析</h4>
+                            <p class="text-sm text-gray-600">结合现代AI技术提供精准解读</p>
+                        </div>
+                        <div class="bg-gray-50 rounded-lg p-4 text-center card-hover">
+                            <div class="w-12 h-12 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                                <i class="fa fa-lock text-xl"></i>
+                            </div>
+                            <h4 class="font-bold mb-2">隐私保护</h4>
+                            <p class="text-sm text-gray-600">严格保护您的个人信息安全</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-dark text-white py-10">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <div class="flex items-center space-x-2 mb-4">
+                        <div class="w-10 h-10 rounded-full bg-gradient-custom flex items-center justify-center text-white">
+                            <i class="fa fa-star-o text-xl"></i>
+                        </div>
+                        <h2 class="text-xl font-bold">Destiny</h2>
+                    </div>
+                    <p class="text-gray-400 mb-4">
+                        探索命运轨迹，把握人生机遇。
+                    </p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fa fa-weixin text-xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fa fa-weibo text-xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fa fa-qq text-xl"></i>
+                        </a>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold mb-4">快速链接</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#home" class="text-gray-400 hover:text-white transition-colors">首页</a></li>
+                        <li><a href="#natal-chart" class="text-gray-400 hover:text-white transition-colors">命盘</a></li>
+                        <li><a href="#chat" class="text-gray-400 hover:text-white transition-colors">对话</a></li>
+                        <li><a href="#about" class="text-gray-400 hover:text-white transition-colors">关于我们</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold mb-4">联系我们</h3>
+                    <ul class="space-y-2">
+                        <li class="flex items-center space-x-2 text-gray-400">
+                            <i class="fa fa-envelope"></i>
+                            <span>contact@destiny.com</span>
+                        </li>
+                        <li class="flex items-center space-x-2 text-gray-400">
+                            <i class="fa fa-phone"></i>
+                            <span>400-123-4567</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 mt-8 pt-6 text-center text-gray-500">
+                <p>&copy; 2023 Destiny. 保留所有权利。</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 了解更多按钮点击事件
+            const learnMoreBtn = document.getElementById('learn-more-btn');
+            if (learnMoreBtn) {
+                learnMoreBtn.addEventListener('click', function() {
+                    window.location.href = '/calculator';
+                });
+            }
+        });
+    </script>
+</body>
+</html>
