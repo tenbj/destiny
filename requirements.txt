@@ -4,3 +4,5 @@ requests
 sqlalchemy
 jinja2
 flask-cors
+bcrypt
+python-dotenv

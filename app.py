@@ -6,9 +6,14 @@ from db import Database
 from ollama_service import OllamaService
 from config import FLASK_HOST, FLASK_PORT, FLASK_DEBUG
 import bcrypt
+import os
+from dotenv import load_dotenv
+
+# 加载.env文件中的环境变量
+load_dotenv()
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your-secret-key-here'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-here')
 CORS(app)
 
 # 初始化数据库和Ollama服务
